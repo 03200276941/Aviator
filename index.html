@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviator Signal Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+
+        .game-board {
+            position: relative;
+            height: 200px;
+            background-color: #252525;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .plane-container {
+            position: relative;
+            height: 100%;
+        }
+
+        .plane {
+            position: absolute;
+            left: 20px;
+            bottom: 50px;
+            font-size: 30px;
+            transition: transform 0.1s linear;
+            transform: translateX(0);
+        }
+
+        .flight-path {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #4CAF50;
+        }
+
+        .multiplier-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .signal-panel {
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .signal-meter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .signal-label {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 3px;
+            flex-grow: 1;
+        }
+
+        .signal-bars .bar {
+            height: 20px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 2px;
+        }
+
+        .signal-percent {
+            margin-left: 10px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .signal-suggestion {
+            font-size: 14px;
+            text-align: center;
+            padding: 8px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .history-graph {
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .history-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .history-values {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-values div {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .controls {
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .bet-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-btn {
+            flex: 1;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .bet-btn:hover {
+            background-color: #444;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #bet-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #bet-btn:hover {
+            background-color: #45a049;
+        }
+
+        #cashout-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #cashout-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .auto-cashout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auto-cashout label {
+            font-size: 14px;
+        }
+
+        .auto-cashout input {
+            flex: 1;
+            padding: 8px;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            text-align: right;
+        }
+
+        .balance-panel {
+            display: flex;
+            justify-content: space-between;
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .balance-panel div {
+            font-size: 14px;
+        }
+
+        .balance-panel span {
+            font-weight: bold;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Aviator Signal Pro</h1>
+        
+        <div class="game-board">
+            <div class="plane-container">
+                <div class="plane" id="plane">✈</div>
+                <div class="flight-path"></div>
+            </div>
+            <div class="multiplier-display" id="multiplier">1.00x</div>
+        </div>
+        
+        <div class="signal-panel">
+            <div class="signal-meter">
+                <div class="signal-label">Signal Strength:</div>
+                <div class="signal-bars" id="signal-bars">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <div class="signal-percent" id="signal-percent">0%</div>
+            </div>
+            <div class="signal-suggestion" id="signal-suggestion">Waiting for signal...</div>
+        </div>
+        
+        <div class="history-graph">
+            <div class="history-title">Last 5 Rounds:</div>
+            <div class="history-values" id="history-values"></div>
+        </div>
+        
+        <div class="controls">
+            <div class="bet-buttons">
+                <button class="bet-btn" data-amount="10">10</button>
+                <button class="bet-btn" data-amount="50">50</button>
+                <button class="bet-btn" data-amount="100">100</button>
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" id="bet-btn">BET</button>
+                <button class="action-btn" id="cashout-btn" disabled>CASHOUT</button>
+            </div>
+            <div class="auto-cashout">
+                <label for="auto-cashout">Auto Cashout:</label>
+                <input type="number" id="auto-cashout" min="1.1" max="10" step="0.1" value="2.0">x
+            </div>
+        </div>
+        
+        <div class="balance-panel">
+            <div>Balance: $<span id="balance">1000</span></div>
+            <div>Bet: $<span id="current-bet">0</span></div>
+            <div>Potential Win: $<span id="potential-win">0</span></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game state
+            const gameState = {
+                balance: 1000,
+                currentBet: 0,
+                gameActive: false,
+                multiplier: 1.0,
+                crashPoint: 1.0,
+                history: [],
+                signalStrength: 0,
+                autoCashout: 2.0
+            };
+            
+            // DOM elements
+            const elements = {
+                plane: document.getElementById('plane'),
+                multiplierDisplay: document.getElementById('multiplier'),
+                signalBars: document.getElementById('signal-bars'),
+                signalPercent: document.getElementById('signal-percent'),
+                signalSuggestion: document.getElementById('signal-suggestion'),
+                historyValues: document.getElementById('history-values'),
+                betBtn: document.getElementById('bet-btn'),
+                cashoutBtn: document.getElementById('cashout-btn'),
+                balanceDisplay: document.getElementById('balance'),
+                currentBetDisplay: document.getElementById('current-bet'),
+                potentialWinDisplay: document.getElementById('potential-win'),
+                autoCashoutInput: document.getElementById('auto-cashout')
+            };
+            
+            // Initialize game
+            initGame();
+            
+            function initGame() {
+                updateUI();
+                setupEventListeners();
+                startSignalAnalysis();
+            }
+            
+            function setupEventListeners() {
+                // Bet buttons
+                document.querySelectorAll('.bet-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (!gameState.gameActive) {
+                            const amount = parseInt(this.getAttribute('data-amount'));
+                            placeBet(amount);
+                        }
+                    });
+                });
+                
+                // Bet button
+                elements.betBtn.addEventListener('click', function() {
+                    if (!gameState.gameActive && gameState.currentBet > 0) {
+                        startGame();
+                    } else if (!gameState.gameActive) {
+                        alert('Please place a bet first');
+                    }
+                });
+                
+                // Cashout button
+                elements.cashoutBtn.addEventListener('click', function() {
+                    if (gameState.gameActive) {
+                        cashout();
+                    }
+                });
+                
+                // Auto cashout input
+                elements.autoCashoutInput.addEventListener('change', function() {
+                    gameState.autoCashout = parseFloat(this.value);
+                });
+            }
+            
+            function placeBet(amount) {
+                if (gameState.balance >= amount) {
+                    gameState.currentBet = amount;
+                    updateUI();
+                } else {
+                    alert('Not enough balance');
+                }
+            }
+            
+            function startGame() {
+                gameState.gameActive = true;
+                gameState.multiplier = 1.0;
+                gameState.crashPoint = generateCrashPoint();
+                
+                elements.betBtn.disabled = true;
+                elements.cashoutBtn.disabled = false;
+                
+                // Deduct bet from balance
+                gameState.balance -= gameState.currentBet;
+                updateUI();
+                
+                // Start game loop
+                gameLoop();
+            }
+            
+            function gameLoop() {
+                if (!gameState.gameActive) return;
+                
+                // Increase multiplier
+                gameState.multiplier += 0.01 * Math.random() * 2;
+                updateMultiplierDisplay();
+                
+                // Check for auto cashout
+                if (gameState.multiplier >= gameState.autoCashout) {
+                    cashout();
+                    return;
+                }
+                
+                // Check for crash
+                if (gameState.multiplier >= gameState.crashPoint) {
+                    endGame();
+                    return;
+                }
+                
+                // Continue loop
+                setTimeout(gameLoop, 50);
+            }
+            
+            function cashout() {
+                if (!gameState.gameActive) return;
+                
+                const winAmount = Math.floor(gameState.currentBet * gameState.multiplier);
+                gameState.balance += winAmount;
+                
+                // Add to history
+                gameState.history.unshift(gameState.multiplier.toFixed(2) + 'x');
+                if (gameState.history.length > 5) {
+                    gameState.history.pop();
+                }
+                
+                endGame();
+                showMessage(`Cashed out at ${gameState.multiplier.toFixed(2)}x! Won $${winAmount}`);
+            }
+            
+            function endGame() {
+                gameState.gameActive = false;
+                gameState.currentBet = 0;
+                
+                elements.betBtn.disabled = false;
+                elements.cashoutBtn.disabled = true;
+                
+                // Reset plane position
+                elements.plane.style.transform = 'translateX(0)';
+                
+                updateUI();
+            }
+            
+            function generateCrashPoint() {
+                // Simple crash point generation (can be improved with more complex algorithm)
+                const r = Math.random();
+                return Math.max(1.1, (r * 100) / (1 - r));
+            }
+            
+            function updateUI() {
+                // Update displays
+                elements.balanceDisplay.textContent = gameState.balance;
+                elements.currentBetDisplay.textContent = gameState.currentBet;
+                elements.potentialWinDisplay.textContent = Math.floor(gameState.currentBet * gameState.multiplier);
+                
+                // Update history
+                updateHistoryDisplay();
+            }
+            
+            function updateMultiplierDisplay() {
+                elements.multiplierDisplay.textContent = gameState.multiplier.toFixed(2) + 'x';
+                
+                // Move plane
+                const maxMovement = 400;
+                const movement = Math.min(maxMovement, (gameState.multiplier - 1) * 100);
+                elements.plane.style.transform = `translateX(${movement}px) rotate(${movement/20}deg)`;
+                
+                // Color change based on multiplier
+                if (gameState.multiplier > 2) {
+                    elements.multiplierDisplay.style.color = '#FF9800';
+                } else if (gameState.multiplier > 1.5) {
+                    elements.multiplierDisplay.style.color = '#FFC107';
+                } else {
+                    elements.multiplierDisplay.style.color = '#4CAF50';
+                }
+            }
+            
+            function updateHistoryDisplay() {
+                elements.historyValues.innerHTML = '';
+                gameState.history.forEach(value => {
+                    const div = document.createElement('div');
+                    div.textContent = value;
+                    
+                    // Color based on value
+                    const num = parseFloat(value);
+                    if (num > 2) {
+                        div.style.backgroundColor = '#4CAF50';
+                    } else if (num > 1.5) {
+                        div.style.backgroundColor = '#8BC34A';
+                    }
+                    
+                    elements.historyValues.appendChild(div);
+                });
+            }
+            
+            function startSignalAnalysis() {
+                // Simulate signal analysis
+                setInterval(() => {
+                    if (!gameState.gameActive) {
+                        analyzeSignal();
+                    }
+                }, 2000);
+            }
+            
+            function analyzeSignal() {
+                // Generate random signal (in a real game, this would analyze patterns)
+                gameState.signalStrength = Math.floor(Math.random() * 100);
+                
+                // Update signal display
+                updateSignalDisplay();
+            }
+            
+            function updateSignalDisplay() {
+                const strength = gameState.signalStrength;
+                elements.signalPercent.textContent = strength + '%';
+                
+                // Update bars
+                const bars = elements.signalBars.querySelectorAll('.bar');
+                const activeBars = Math.ceil(strength / 20);
+                
+                bars.forEach((bar, index) => {
+                    if (index < activeBars) {
+                        // Color based on strength
+                        if (strength > 80) {
+                            bar.style.backgroundColor = '#4CAF50';
+                        } else if (strength > 50) {
+                            bar.style.backgroundColor = '#FFC107';
+                        } else {
+                            bar.style.backgroundColor = '#FF9800';
+                        }
+                    } else {
+                        bar.style.backgroundColor = '#333';
+                    }
+                });
+                
+                // Update suggestion
+                updateSignalSuggestion(strength);
+            }
+            
+            function updateSignalSuggestion(strength) {
+                let suggestion = '';
+                let color = '#ffffff';
+                
+                if (strength > 80) {
+                    suggestion = 'STRONG SIGNAL - Good time to bet high (suggest 2.0x-3.0x)';
+                    color = '#4CAF50';
+                } else if (strength > 60) {
+                    suggestion = 'MODERATE SIGNAL - Consider betting (suggest 1.5x-2.0x)';
+                    color = '#FFC107';
+                } else if (strength > 40) {
+                    suggestion = 'WEAK SIGNAL - Caution advised (suggest 1.2x-1.5x)';
+                    color = '#FF9800';
+                } else {
+                    suggestion = 'LOW SIGNAL - Not ideal for betting';
+                    color = '#f44336';
+                }
+                
+                elements.signalSuggestion.textContent = suggestion;
+                elements.signalSuggestion.style.color = color;
+            }
+            
+            function showMessage(msg) {
+                // In a real game, you might have a proper notification system
+                alert(msg);
+            }
+        });
+    </script>
+</body>
+</html>
